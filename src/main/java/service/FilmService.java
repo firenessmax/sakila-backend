@@ -1,5 +1,6 @@
 package service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -12,14 +13,24 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 
+import facade.ActorFacade;
+import facade.FilmActorFacade;
 import facade.FilmFacade;
+import model.Actor;
 import model.Film;
+import model.FilmActor;
 
 @Path("/films")
 public class FilmService {
 	
 	@EJB 
 	FilmFacade filmFacadeEJB;
+	
+	@EJB 
+	ActorFacade actorFacadeEJB;
+
+	@EJB 
+	FilmActorFacade filmActorFacadeEJB;
 	
 	Logger logger = Logger.getLogger(FilmService.class.getName());
 	
@@ -34,6 +45,26 @@ public class FilmService {
     @Produces({"application/xml", "application/json"})
     public Film find(@PathParam("id") Integer id) {
         return filmFacadeEJB.find(id);
+    }
+	
+    @GET
+    @Path("{id}/actors")
+    @Produces({"application/xml", "application/json"})
+    public List<Actor> findActor(@PathParam("id") Integer id) {
+    	List<FilmActor> listaFilmActor = filmActorFacadeEJB.findAll(); //relacion film-actor
+    	List<Actor> listaActores = actorFacadeEJB.findAll();//se obtienen todos los actores
+    	List<Actor> respuesta = new ArrayList<Actor>();
+    	for(int i=0; i<listaFilmActor.size(); i++){
+        	if(listaFilmActor.get(i).getFilmId() == id ){
+        		for(int j=0; j<listaActores.size(); j++){
+            		if(listaActores.get(j).getActorId() == listaFilmActor.get(i).getActorId()){
+            			respuesta.add(listaActores.get(j));
+            			break;
+            		}
+            	}
+        	}
+        }
+       return respuesta;
     }
 	
 	@POST
